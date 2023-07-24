@@ -2,10 +2,27 @@
   const compare = require('bcrypt').compare;
   const { sign } = require('jsonwebtoken');
   const User = require('../models/user.model');
-  const { find, findOne } = require('../models/user.model');
+
+  const jwt = require('jsonwebtoken');
+
+const authenticateToken = (req, res, next) => {
+  const token = req.header('Authorization');
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication failed: No token provided' });
+  }
+
+  jwt.verify(token, process.env.SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Authentication failed: Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
   
 
-  router.get('/', async (req, res) => {
+  router.get('/',authenticateToken, async (req, res) => {
     try {
       const users = await User.find();
       res.status(200).json(users);
@@ -15,9 +32,12 @@
     }
   });
 
-  const genToken = (_id) =>{
-    return sign({_id},process.env.SECRET,{expiresIn:'5d'})
-  }
+  const genToken = (user) => {
+    const payload = {
+      username: user.username,
+    };
+    return sign(payload, process.env.SECRET, { expiresIn: '5d' });
+  };
 
   //Login
   router.post('/login',async(req,res) =>{
@@ -26,7 +46,7 @@
 
       const user = await User.findOne({username})
 
-      const token = genToken(user._id);
+      const token = genToken(user);
       
 
       if(!user){
