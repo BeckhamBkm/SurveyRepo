@@ -9,7 +9,7 @@ function SurveyQuestions() {
 
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState(0);
+  const [answers, setAnswers] = useState([]);
   const {user, dispatch} = useAuthContext();
   const [, setUserAnswers] = useState([]);
 
